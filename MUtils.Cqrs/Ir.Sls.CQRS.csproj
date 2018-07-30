@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9C216A4E-90FC-46DC-98FC-7FD0FC43621D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Ir.Sls.CQRS</RootNamespace>
+    <AssemblyName>Ir.Sls.CQRS</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Runtime.Caching" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AdditionaCommandlActionAttribute.cs" />
+    <Compile Include="AsyncQueryHandlersCache.cs" />
+    <Compile Include="CacheKeyPolicy.cs" />
+    <Compile Include="CachePolicyAttribute.cs" />
+    <Compile Include="CacheScope.cs" />
+    <Compile Include="CacheServiceExtensions.cs" />
+    <Compile Include="CloneHelper.cs" />
+    <Compile Include="CommandAdditionalActionsDecorator.cs" />
+    <Compile Include="CommandLoggerDecorator.cs" />
+    <Compile Include="CommandValidatorDecorator.cs" />
+    <Compile Include="CqrsConfig.cs" />
+    <Compile Include="CycleContextExtensions.cs" />
+    <Compile Include="DefaultCacheService.cs" />
+    <Compile Include="DontLogAttribute.cs" />
+    <Compile Include="DontValidateAttribute.cs" />
+    <Compile Include="ICacheService.cs" />
+    <Compile Include="ICommand.cs" />
+    <Compile Include="ICommandAdditionalActionInvoker.cs" />
+    <Compile Include="ICommandExecuter.cs" />
+    <Compile Include="ICycleContext.cs" />
+    <Compile Include="ISerializer.cs" />
+    <Compile Include="IService.cs" />
+    <Compile Include="ILogger.cs" />
+    <Compile Include="IQuery.cs" />
+    <Compile Include="IQueryHandler.cs" />
+    <Compile Include="IQueryProcessor.cs" />
+    <Compile Include="IValidator.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryCacheDecorator.cs" />
+    <Compile Include="QueryHandlersCache.cs" />
+    <Compile Include="QueryLoggerDecorator.cs" />
+    <Compile Include="QueryProcessor.cs" />
+    <Compile Include="CycleContext.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

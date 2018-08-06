@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using System.Reflection;
 using Quartz;
 using Quartz.Impl;
 
@@ -59,7 +61,7 @@ namespace MUtils.Quartz
             if (!enable) return (null, null);
             var interval = config.IntervalInSeconds;
             var types = config.Types;
-            int? rCount = config.RepeatCount;
+            var rCount = config.RepeatCount;
             Action<SimpleScheduleBuilder> b = builder =>
             {
                 if (rCount.HasValue) builder.WithRepeatCount(rCount.Value);
@@ -71,8 +73,16 @@ namespace MUtils.Quartz
                 builder.WithMisfireHandlingInstructionIgnoreMisfires();
             };
 
-            var configs = config.JobInstance;
-            return (b, configs);
+            var instances = new List<Dictionary<string, object>>();
+            foreach (var type in types)
+            {
+                foreach (var item in config.JobInstance)
+                {
+                    item.Add("type", type);
+                    instances.Add(item);
+                }
+            }
+            return (b, instances.Any() ? instances : config.JobInstance);
         }
 
         public void ReScheduleJob(Configuration config, TriggerKey triggerKey, DateTime? startAt)

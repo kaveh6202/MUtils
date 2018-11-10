@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using MUtils.Interface;
+using MUtils.Interface.ConfigurationModel;
 
 namespace MUtils.CqrsBase {
 
@@ -9,10 +11,10 @@ namespace MUtils.CqrsBase {
         : IQueryHandler<TQuery, TResult>
         where TQuery : IQuery<TResult> {
 
-        private readonly ICacheService _cacheService;
+        private readonly ICacher _cacheService;
         private readonly IQueryHandler<TQuery, TResult> _decoratee;
 
-        public QueryCacheDecorator(ICacheService cacheService, IQueryHandler<TQuery, TResult> decoratee) {
+        public QueryCacheDecorator(ICacher cacheService, IQueryHandler<TQuery, TResult> decoratee) {
             _cacheService = cacheService;
             _decoratee = decoratee;
         }
@@ -24,13 +26,15 @@ namespace MUtils.CqrsBase {
                 return _decoratee.Handle(query);
 
             var cacheKey = GetCacheKey(attr, query);
-            var obj = _cacheService.Get(cacheKey, attr.Scope);
+            var obj = _cacheService.GetValue(cacheKey);
             if (obj is TResult)
                 return (TResult)obj;
             var result = _decoratee.Handle(query);
             if (result != null)
-                _cacheService.Set(cacheKey, result, 
-                    DateTimeOffset.UtcNow.Add(TimeSpan.FromSeconds(attr.LifeSpanInSecond)));
+                _cacheService.SetValue(cacheKey, result, new CacheConfiguration
+                {
+                    AbsoluteExpiration = DateTimeOffset.UtcNow.Add(TimeSpan.FromSeconds(attr.LifeSpanInSecond))
+                });
             return result;
         }
 

@@ -1,4 +1,6 @@
-﻿namespace MUtils.Interface
+﻿using System;
+
+namespace MUtils.Interface
 {
     public interface IObjectMapper
     {

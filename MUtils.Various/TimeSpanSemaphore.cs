@@ -1,123 +1,67 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MUtils.Various
 {
     public class TimeSpanSemaphore : IDisposable
     {
         private readonly SemaphoreSlim _pool;
-
-        // the time span for the max number of callers
         private readonly TimeSpan _resetSpan;
-
-        // keep track of the release times
-        private readonly Queue<DateTime> _releaseTimes;
-
-        // protect release time queue
-        private readonly object _queueLock = new object();
+        private readonly long _startTime = DateTime.Now.ToUnixTimeMilliseconds();
 
         public TimeSpanSemaphore(int maxCount, TimeSpan resetSpan)
         {
-            _pool = new SemaphoreSlim(maxCount, maxCount);
-            _resetSpan = resetSpan;
-
-            // initialize queue with old timestamps
-            _releaseTimes = new Queue<DateTime>(maxCount);
-            for (int i = 0; i < maxCount; i++)
-            {
-                _releaseTimes.Enqueue(DateTime.MinValue);
-            }
+            this._pool = new SemaphoreSlim(maxCount, maxCount);
+            this._resetSpan = resetSpan;
         }
 
-        /// <summary>
-        /// Blocks the current thread until it can enter the semaphore, while observing a CancellationToken
-        /// </summary>
-        private void Wait(CancellationToken cancelToken)
-        {
-            // will throw if token is cancelled
-            _pool.Wait(cancelToken);
-
-            // get the oldest release from the queue
-            DateTime oldestRelease;
-            lock (_queueLock)
-            {
-                oldestRelease = _releaseTimes.Dequeue();
-            }
-
-            // sleep until the time since the previous release equals the reset period
-            DateTime now = DateTime.UtcNow;
-            DateTime windowReset = oldestRelease.Add(_resetSpan);
-            if (windowReset > now)
-            {
-                int sleepMilliseconds = Math.Max(
-                    (int)(windowReset.Subtract(now).Ticks / TimeSpan.TicksPerMillisecond),
-                    1); // sleep at least 1ms to be sure next window has started
-                Debug.WriteLine("Waiting {0} ms for TimeSpanSemaphore limit to reset.", sleepMilliseconds);
-
-                bool cancelled = cancelToken.WaitHandle.WaitOne(sleepMilliseconds);
-                if (cancelled)
-                {
-                    Release();
-                    cancelToken.ThrowIfCancellationRequested();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Exits the semaphore
-        /// </summary>
-        private void Release()
-        {
-            lock (_queueLock)
-            {
-                _releaseTimes.Enqueue(DateTime.UtcNow);
-            }
-            _pool.Release();
-        }
-
-        /// <summary>
-        /// Runs an action after entering the semaphore (if the CancellationToken is not canceled)
-        /// </summary>
         public void Run(Action action, CancellationToken cancelToken)
         {
-            // will throw if token is cancelled, but will auto-release lock
-            Wait(cancelToken);
 
             try
             {
+                this._pool.Wait(cancelToken);
                 action();
             }
             finally
             {
-                Release();
+                var dt = DateTime.Now.ToUnixTimeMilliseconds();
+                //fire and forget
+                Task.Run(() =>
+                {
+                    int sleepTime = (int)_resetSpan.TotalMilliseconds -
+                                    (int)((dt - _startTime) % _resetSpan.TotalMilliseconds);
+                    System.Threading.Thread.Sleep(sleepTime);
+                    _pool.Release();
+                });
             }
         }
-
-        public Result Run<Result>(Func<Result> action, CancellationToken cancelToken)
+        public async Task<TResult> RunAsync<TResult>(Func<Task<TResult>> action, CancellationToken cancelToken)
         {
-            // will throw if token is cancelled, but will auto-release lock
-            Wait(cancelToken);
 
             try
             {
-                return action();
+                this._pool.Wait(cancelToken);
+                return await action();
             }
             finally
             {
-                Release();
+                var dt = DateTime.Now.ToUnixTimeMilliseconds();
+                //fire and forget
+                Task.Factory.StartNew(() =>
+                {
+                    int sleepTime = (int) _resetSpan.TotalMilliseconds -
+                                    (int) ((dt - _startTime) % _resetSpan.TotalMilliseconds);
+                    System.Threading.Thread.Sleep(sleepTime);
+                    _pool.Release();
+                });
             }
         }
 
-
-
-        /// <summary>
-        /// Releases all resources used by the current instance
-        /// </summary>
         public void Dispose()
         {
-            _pool.Dispose();
+            this._pool.Dispose();
         }
     }
 }

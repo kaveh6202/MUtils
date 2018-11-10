@@ -6,6 +6,7 @@ namespace MUtils.Quartz
     public class Configuration
     {
         public int? IntervalInSeconds { get; set; }
+        public int? StartDelayInSeconds { get; set; }
         public bool Disable { get; set; } = false;
         public int? RepeatCount { get; set; }
         public bool AddSymbolIntervalDataToContext { get; set; } = true;

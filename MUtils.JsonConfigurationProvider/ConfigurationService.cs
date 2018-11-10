@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.Extensions.Caching.Memory;
 using MUtils.Configuration;
@@ -10,9 +11,12 @@ namespace MUtils.JsonConfigurationProvider
 {
     public class ConfigurationService<T> : IConfigurationService<T> where T : BaseConfigurationModel
     {
-
+        private static bool DebugMode = false;
         private static string FileName => ConfigurationManager.AppSettings["ConfigFileName"] ?? "Config.json";
-        private static string DebugFileName => ConfigurationManager.AppSettings["ConfigFileName-debug"] ?? "Config-debug.json";
+
+        private static string DebugFileName =>
+            ConfigurationManager.AppSettings["ConfigFileName-debug"] ?? "Config-debug.json";
+
         private readonly ISerializer _serializer;
         private readonly ICacher _memoryCache;
         private readonly int _configCacheIntervalInSeconds;
@@ -27,6 +31,11 @@ namespace MUtils.JsonConfigurationProvider
                 _configCacheIntervalInSeconds = 300;
         }
 
+        public void SetDebugMode()
+        {
+            DebugMode = true;
+        }
+
         public T Get()
         {
             var key = string.Intern($"{CacheKey}.{typeof(T).Name}");
@@ -34,11 +43,7 @@ namespace MUtils.JsonConfigurationProvider
             if (value != null)
                 return value as T;
             var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data", FileName);
-#if DEBUG
-            var debugfilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data", DebugFileName);
-            if (File.Exists(debugfilePath))
-                filePath = debugfilePath;
-#endif
+            GetDebugConfigFileName(ref filePath);
             var fileContent = File.ReadAllText(filePath);
             var configModel = _serializer.Deserialize<T>(fileContent);
             _memoryCache.SetValue(key, configModel,
@@ -47,6 +52,18 @@ namespace MUtils.JsonConfigurationProvider
                     SlidingExpiration = TimeSpan.FromSeconds(_configCacheIntervalInSeconds)
                 });
             return configModel;
+        }
+
+        //[Conditional("DEBUG")]
+        private void GetDebugConfigFileName(ref string path)
+        {
+            var debugMode = Environment.GetEnvironmentVariable("debugMode");
+            if (!string.IsNullOrEmpty(debugMode) && debugMode == "true")
+            {
+                var debugfilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"App_Data", DebugFileName);
+                if (File.Exists(debugfilePath))
+                    path = debugfilePath;
+            }
         }
     }
 }

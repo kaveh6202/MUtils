@@ -7,6 +7,7 @@ namespace MUtils.AutoMapper
     public class AutoMapperWrapper : IObjectMapper
     {
         private readonly IMapper _mapper = null;
+
         public AutoMapperWrapper(IMapper mapper)
         {
             _mapper = mapper;
@@ -27,5 +28,10 @@ namespace MUtils.AutoMapper
             return _mapper.Map(source, destination);
         }
 
+        public TDestination Map<TSource, TDestination>(TSource source, TDestination destination,
+            Action<IMappingOperationOptions<TSource, TDestination>> opt)
+        {
+            return _mapper.Map(source, destination, opt);
+        }
     }
 }

@@ -4,11 +4,16 @@ using MUtils.MessageBroker.Model;
 
 namespace MUtils.MessageBroker.Domain
 {
-    public interface ISubscriper<T> : IDisposable
+    public interface ISubscriber : IDisposable
     {
         bool AutoAck { get; }
         Server Server { get; }
         Queue Queue { get; }
-        Action<Result<T>> Recievers { get; set; }
+        Action<Result<string>> Recievers { get; set; }
+    }
+
+    public interface ISubscriber<T> : ISubscriber
+    {
+        new Action<Result<T>> Recievers { get; set; }
     }
 }

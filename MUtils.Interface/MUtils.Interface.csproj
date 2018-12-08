@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="AutoMapper">
       <HintPath>..\..\..\..\..\.nuget\packages\automapper\7.0.1\lib\netstandard2.0\AutoMapper.dll</HintPath>
     </Reference>

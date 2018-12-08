@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Sider;
 using StackExchange.Redis;
 
 namespace MUtils.Cache.Redis
@@ -7,5 +8,6 @@ namespace MUtils.Cache.Redis
     {
         Task<IDatabase> GetDataBase(RedisConfiguration configuration, int db);
         Task<ConnectionMultiplexer> GetConnection(RedisConfiguration configuration);
+        RedisClient GetSimpleConnection(RedisConfiguration configuration);
     }
 }

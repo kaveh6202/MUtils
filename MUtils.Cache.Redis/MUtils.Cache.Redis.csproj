@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Sider" Version="0.10.2.22156" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.513" />
   </ItemGroup>
 

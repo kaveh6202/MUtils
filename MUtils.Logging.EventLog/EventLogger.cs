@@ -9,19 +9,16 @@ namespace MUtils.Logging.EventLog
     public class EventLogger : IEventLogger
     {
         private readonly System.Diagnostics.EventLog _eventLog;
-        private readonly IObjectMapper _mapper;
         private string _minLogSeverity;
-        private bool initialized = false;
-        public EventLogger(IObjectMapper mapper)
+        private static bool _initialized;
+        public EventLogger()
         {
-            _mapper = mapper;
             _eventLog = new System.Diagnostics.EventLog();
-            System.Diagnostics.Trace.
         }
 
         public void UseConfig(EventLogConfiguration config)
         {
-            initialized = true;
+            _initialized = true;
             _minLogSeverity = config.MinLogSeverity;
             try
             {
@@ -39,21 +36,21 @@ namespace MUtils.Logging.EventLog
         }
         public void LogInformation(string sender, string message)
         {
-            if (!initialized) throw new Exception("event log did not initialized");
+            if (!_initialized) throw new Exception("event log did not initialized");
             if (_minLogSeverity.Equals("information"))
                 _eventLog.WriteEntry($"{sender} : {message}", EventLogEntryType.Information);
         }
 
         public void UrgentInfo(string message)
         {
-            if (!initialized) throw new Exception("event log did not initialized");
+            if (!_initialized) throw new Exception("event log did not initialized");
             if (_minLogSeverity.Equals("urgentInformation") || _minLogSeverity.Equals("information"))
                 _eventLog.WriteEntry(message, EventLogEntryType.Information);
         }
 
         public void LogError(string sender, string message, Exception ex)
         {
-            if (!initialized) throw new Exception("event log did not initialized");
+            if (!_initialized) throw new Exception("event log did not initialized");
             if (_minLogSeverity.Equals("information") || _minLogSeverity.Equals("urgentInformation") || _minLogSeverity.Equals("warning") ||
                 _minLogSeverity.Equals("error"))
             {
@@ -64,7 +61,7 @@ namespace MUtils.Logging.EventLog
 
         public void LogWarning(string sender, string message)
         {
-            if (!initialized) throw new Exception("event log did not initialized");
+            if (!_initialized) throw new Exception("event log did not initialized");
             if (_minLogSeverity.Equals("information") || _minLogSeverity.Equals("urgentInformation") ||
                 _minLogSeverity.Equals("warning"))
                 _eventLog.WriteEntry($"{sender} : {message}", EventLogEntryType.Warning);

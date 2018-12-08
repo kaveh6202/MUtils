@@ -26,33 +26,59 @@ namespace MUtils.Quartz
                 var jobDetail = JobBuilder.Create(job.GetType()).Build();
                 var name = jobDetail.JobType.Name;
                 if (!configs.ContainsKey(name)) continue;
-                var sting = GetScheduler(configs[name]);
-                var startDelay = configs[name].StartDelayInSeconds ?? 0;
 
-                if (sting.builder == null) continue;
-                if (sting.configs != null && sting.configs.Any())
+
+                if (configs[name].JobInstanceWithConfig != null && configs[name].JobInstanceWithConfig.Any())
                 {
-                    foreach (var item in sting.configs)
+                    var cnf = GetScheduler2(configs[name]);
+                    foreach (var item in cnf)
                     {
                         jobDetail = JobBuilder.Create(job.GetType())
-                            .UsingJobData(new JobDataMap((IDictionary<string, object>)item))
+                            .UsingJobData(new JobDataMap((IDictionary<string, object>) item.Value.dic))
                             .WithIdentity(Guid.NewGuid().ToString())
                             .Build();
                         var trigger = TriggerBuilder.Create()
-                            .WithSimpleSchedule(sting.builder)
-                            .StartAt(startDelay > 0 ? DateTimeOffset.UtcNow.AddSeconds(startDelay) : DateTimeOffset.UtcNow)
+                            .WithSimpleSchedule(item.Key)
+                            .StartAt(item.Value.cnf.StartAt.HasValue && item.Value.cnf.StartAt.Value.ToUniversalTime() > DateTime.UtcNow
+                                ? item.Value.cnf.StartAt.Value.ToUniversalTime()
+                                : item.Value.cnf.StartDelayInSeconds.HasValue
+                                    ? DateTimeOffset.UtcNow.AddSeconds(item.Value.cnf.StartDelayInSeconds.Value)
+                                    : DateTimeOffset.UtcNow)
                             .Build();
-                            
+
                         Scheduler.ScheduleJob(jobDetail, trigger);
                     }
                 }
                 else
                 {
-                    var trigger = TriggerBuilder.Create()
-                        .WithSimpleSchedule(sting.builder)
-                        .StartAt(startDelay > 0 ? DateTimeOffset.UtcNow.AddSeconds(startDelay) : DateTimeOffset.UtcNow)
-                        .Build();
-                    Scheduler.ScheduleJob(jobDetail, trigger);
+                    var sting = GetScheduler(configs[name]);
+                    var startDelay = configs[name].StartDelayInSeconds ?? 0;
+
+                    if (sting.builder == null) continue;
+                    if (sting.configs != null && sting.configs.Any())
+                    {
+                        foreach (var item in sting.configs)
+                        {
+                            jobDetail = JobBuilder.Create(job.GetType())
+                                .UsingJobData(new JobDataMap((IDictionary<string, object>)item))
+                                .WithIdentity(Guid.NewGuid().ToString())
+                                .Build();
+                            var trigger = TriggerBuilder.Create()
+                                .WithSimpleSchedule(sting.builder)
+                                .StartAt(startDelay > 0 ? DateTimeOffset.UtcNow.AddSeconds(startDelay) : DateTimeOffset.UtcNow)
+                                .Build();
+
+                            Scheduler.ScheduleJob(jobDetail, trigger);
+                        }
+                    }
+                    else
+                    {
+                        var trigger = TriggerBuilder.Create()
+                            .WithSimpleSchedule(sting.builder)
+                            .StartAt(startDelay > 0 ? DateTimeOffset.UtcNow.AddSeconds(startDelay) : DateTimeOffset.UtcNow)
+                            .Build();
+                        Scheduler.ScheduleJob(jobDetail, trigger);
+                    }
                 }
             }
         }
@@ -122,6 +148,34 @@ namespace MUtils.Quartz
                 }
             return (b, instances.Any() ? instances : config.JobInstance);
         }
+
+        public IEnumerable<KeyValuePair<Action<SimpleScheduleBuilder>,(Configuration cnf,Dictionary<string, object> dic)>> GetScheduler2(Configuration config)
+        {
+            var returnValue = new List<KeyValuePair<Action<SimpleScheduleBuilder>, (Configuration cnf, Dictionary<string, object> dic)>>();
+            if (config.Disable)
+                return returnValue;
+            foreach (var cnf in config.JobInstanceWithConfig)
+            {
+                var disable = cnf.Key.Disable;
+                if (disable) continue;
+                var interval = cnf.Key.IntervalInSeconds > 0 ? cnf.Key.IntervalInSeconds : config.IntervalInSeconds;
+                var rCount = cnf.Key.RepeatCount ?? config.RepeatCount;
+                Action<SimpleScheduleBuilder> b = builder =>
+                {
+                    if (rCount.HasValue) builder.WithRepeatCount(rCount.Value);
+                    else
+                    {
+                        builder.RepeatForever();
+                    }
+                    if (interval.HasValue) builder.WithInterval(TimeSpan.FromSeconds(interval.Value));
+                    builder.WithMisfireHandlingInstructionIgnoreMisfires();
+                };
+                returnValue.Add(
+                    new KeyValuePair<Action<SimpleScheduleBuilder>, (Configuration, Dictionary<string, object>)>(b,
+                        (cnf.Key, cnf.Value))); 
+            }
+            return returnValue;
+        }
         public void ReScheduleJob(Configuration config, TriggerKey triggerKey, DateTime? startAt)
         {
             var scheduler = GetScheduler(config);
@@ -142,7 +196,6 @@ namespace MUtils.Quartz
             }
             Scheduler.RescheduleJob(triggerKey, trigger);
         }
-
         public void StartJob(JobKey key)
         {
                 

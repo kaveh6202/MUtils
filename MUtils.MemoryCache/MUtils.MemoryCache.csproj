@@ -5,7 +5,14 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MUtilsSign.snk</AssemblyOriginatorKeyFile>
-    <Version>1.0.2</Version>
+    <Version>1.0.2.1</Version>
+    <Description>Update Project Configuration</Description>
+    <RepositoryUrl>https://github.com/kaveh6202/MUtils/tree/master/MUtils.MemoryCache</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

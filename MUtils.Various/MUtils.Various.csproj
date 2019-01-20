@@ -3,12 +3,19 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.7.6</Version>
-    <AssemblyVersion>1.0.7.6</AssemblyVersion>
-    <FileVersion>1.0.7.6</FileVersion>
+    <Version>1.0.7.7</Version>
+    <AssemblyVersion>1.0.7.7</AssemblyVersion>
+    <FileVersion>1.0.7.7</FileVersion>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MUtilsSign.snk</AssemblyOriginatorKeyFile>
+    <Description>Update Project Configuration</Description>
+    <RepositoryUrl>https://github.com/kaveh6202/MUtils/tree/master/MUtils.Various</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

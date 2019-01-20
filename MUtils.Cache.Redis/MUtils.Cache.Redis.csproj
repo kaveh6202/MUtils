@@ -3,15 +3,26 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.5</Version>
-    <SignAssembly>true</SignAssembly>
+    <Version>1.0.7.1</Version>
+    <SignAssembly>false</SignAssembly>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>MUtilsSign.snk</AssemblyOriginatorKeyFile>
+    <RepositoryUrl>https://github.com/kaveh6202/MUtils/tree/master/MUtils.Cache.Redis</RepositoryUrl>
+    <Description>Update Project Configuration</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Sider" Version="0.10.2.22156" />
-    <PackageReference Include="StackExchange.Redis" Version="2.0.513" />
+    <Compile Remove="SimpleRedisCacheService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.0.519" />
   </ItemGroup>
 
   <ItemGroup>

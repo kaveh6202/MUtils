@@ -12,5 +12,6 @@ namespace MUtils.MessageBroker
         IPullInfo<T> Pull<T>(Server server, Queue queue, ushort count, bool autoAck = true);
         IPullInfo<string> Pull(Server server, Queue queue, ushort count, bool autoAck = false);
         IPublisher GetOrNewPublisher(Server server, string publisherName);
+        int GetMessageCount(Server server, Queue queue);
     }
 }

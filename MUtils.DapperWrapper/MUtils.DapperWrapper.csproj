@@ -3,9 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.2</Version>
+    <Version>1.0.2.1</Version>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MUtilsSign.snk</AssemblyOriginatorKeyFile>
+    <Description>Update Project Configuration</Description>
+    <RepositoryUrl>https://github.com/kaveh6202/MUtils/tree/master/MUtils.DapperWrapper</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

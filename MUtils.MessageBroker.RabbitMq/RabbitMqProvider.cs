@@ -43,6 +43,11 @@ namespace MUtils.MessageBroker.RabbitMq
             return PublisherPool.GetOrAdd(publisherName, GetPublisher(server));
         }
 
+        public int GetMessageCount(Server server, Queue queue)
+        {
+            throw new NotImplementedException();
+        }
+
         public ISubscriber<T> GetSubScriber<T>(Server server, Queue queue, Action<Result<T>> reciever, bool autoAck)
         {
             return new RabbitSubScriber<T>(_serializer, server, queue, reciever, autoAck);

@@ -2,33 +2,34 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+//using CSRedis;
 using MUtils.Interface;
 using MUtils.Interface.ConfigurationModel;
-using Sider;
 
 
 namespace MUtils.Cache.Redis
 {
     public class SimpleRedisCacheService : IRedisCacheService, ICacher
     {
-        private readonly RedisClient _dataBase = null;
+        private RedisClient _dataBase = null;
         private readonly ISerializer _serializer = null;
         private readonly ILogger _logger = null;
         private readonly RedisConfiguration _config = null;
+        private readonly IConnectionFactory connFactory;
         public SimpleRedisCacheService(RedisConfiguration configuration, ISerializer serializer
                                , IConnectionFactory connectionFactory = null, ILogger logger = null
                                , int db = 0)
         {
             _config = configuration;
             _logger = logger;
-            var connFactory = connectionFactory ?? new RedisDefaultConnectionFactory();
+            connFactory = connectionFactory ?? new RedisDefaultConnectionFactory();
             _dataBase = connFactory.GetSimpleConnection(configuration);
         }
 
         public SimpleRedisCacheService(RedisConfiguration configuration, int db = 0)
         {
             _config = configuration;
-            var connFactory = new RedisDefaultConnectionFactory();
+            connFactory = new RedisDefaultConnectionFactory();
             _dataBase = connFactory.GetSimpleConnection(configuration);
         }
 
@@ -132,19 +133,19 @@ namespace MUtils.Cache.Redis
 
         public void SetString(string key, string value, TimeSpan lifeTime)
         {
-            _dataBase.SetEX(key, lifeTime, value);
+            RedisFunc(() => _dataBase.Set(key, (object) value, lifeTime));
         }
         
 
         public void SetString(string key, string value)
         {
-            _dataBase.Set(key, value);
+            RedisFunc(() => _dataBase.Set(key, value));
         }
 
         public void SetStrings(Dictionary<string, string> keyValues)
         {
-            var kv = keyValues.ToDictionary(o => o.Key, o => o.Value).ToArray();
-            var resp = _dataBase.MSet(kv);
+            var kv = keyValues.Select(o => new Tuple<string, object>(o.Key, o.Value)).ToArray();
+            var resp = RedisFunc(() => _dataBase.MSet(kv));
             if (!resp)
             {
                 throw new Exception("batch insertion encoured an error");
@@ -169,12 +170,12 @@ namespace MUtils.Cache.Redis
         public void SetValue(string key, object value, TimeSpan lifeTime)
         {
             var json = _serializer.Serialize(value);
-            _dataBase.SetEX(key, lifeTime, json);
+            RedisFunc(() => _dataBase.Set(key, json, lifeTime));
         }
         public void SetValue(string key, object value)
         {
             var json = _serializer.Serialize(value);
-            _dataBase.Set(key, json);
+            RedisFunc(() => _dataBase.Set(key, json));
         }
 
         public async Task SetValueAsync(string key, object value, TimeSpan lifeTime)
@@ -185,13 +186,12 @@ namespace MUtils.Cache.Redis
         public void SetValue(string key, object value, DateTimeOffset expireTime)
         {
             var json = _serializer.Serialize(value);
-            _dataBase.SetEX(key, expireTime - DateTimeOffset.UtcNow, json);
+            RedisFunc(() => _dataBase.Set(key, json, expireTime - DateTimeOffset.UtcNow));
         }
 
         public async Task SetValueAsync(string key, object value, DateTimeOffset expireTime)
         {
-            //var json = _serializer.Serialize(value);
-            //await _dataBase.StringSetAsync(key, json, expireTime - DateTimeOffset.UtcNow);
+            throw new NotImplementedException();
         }
 
         #region Private Method
@@ -209,6 +209,28 @@ namespace MUtils.Cache.Redis
                 return default(T);
             }
         }
+
+        private bool RedisFunc(Func<string> func)
+        {
+            var counter = 0;
+            while (counter < _config.EndPoints.Length)
+            {
+                counter++;
+                try
+                {
+                    var result = func.Invoke();
+                    if (result.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+                        return true;
+                }
+                catch (Exception e)
+                {
+                    _dataBase = connFactory.NewSimpleConnection();
+                }
+                
+            }
+            return false;
+        }
+
         #endregion
 
         #region IDisposable Members

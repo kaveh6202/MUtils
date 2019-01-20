@@ -1,14 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Sider;
+//using CSRedis;
 using StackExchange.Redis;
 
 namespace MUtils.Cache.Redis
 {
     public class RedisDefaultConnectionFactory : IConnectionFactory
     {
-        private static readonly Queue<RedisClient> SimpleClients = new Queue<RedisClient>();
+        private static readonly Queue<string> SimpleClients = new Queue<string>();
+        //private static RedisClient _currentClient = null;
         private static readonly object SimpleClientLock = new object();
 
 
@@ -18,30 +21,47 @@ namespace MUtils.Cache.Redis
             return await ConnectionMultiplexer.ConnectAsync(options);
         }
 
-        public RedisClient GetSimpleConnection(RedisConfiguration configuration)
+        public ConnectionMultiplexer GetConnectionSync(RedisConfiguration configuration)
         {
-            if (!SimpleClients.Any())
-                lock (SimpleClientLock)
-                    if (!SimpleClients.Any())
-                    {
-                        foreach (var configurationEndPoint in configuration.EndPoints)
-                        {
-                            var redisSettings = RedisSettings.Build();
-                            if (!string.IsNullOrEmpty(configuration.Password)) redisSettings.Auth(configuration.Password);
-                            redisSettings.Host(configurationEndPoint.Split(':')[0]);
-                            redisSettings.ConnectionTimeout(configuration.ConnectTimeout);
-                            redisSettings.Port(int.Parse(configurationEndPoint.Split(':')[1]));
-                            var rc = new RedisClient(redisSettings);
-                            SimpleClients.Enqueue(rc);
-                        }
-                    }
-            lock (SimpleClientLock)
-            {
-                var item = SimpleClients.Dequeue();
-                SimpleClients.Enqueue(item);
-                return item;
-            }
+            ConfigurationOptions options = GetRedisOptions(configuration);
+            return ConnectionMultiplexer.Connect(options);
         }
+
+        //public RedisClient GetSimpleConnection(RedisConfiguration configuration)
+        //{
+        //    if (_currentClient != null) return _currentClient;
+        //    if (!SimpleClients.Any())
+        //        lock (SimpleClientLock)
+        //            if (!SimpleClients.Any())
+        //            {
+        //                foreach (var configurationEndPoint in configuration.EndPoints)
+        //                {
+        //                    SimpleClients.Enqueue(configurationEndPoint);
+        //                }
+        //            }
+        //    lock (SimpleClientLock)
+        //    {
+        //        var item = SimpleClients.Dequeue();
+        //        var rc = new RedisClient(item.Split(':')[0],
+        //            int.Parse(item.Split(':')[1]));
+        //        _currentClient = rc;
+        //        SimpleClients.Enqueue(item);
+        //        return _currentClient;
+        //    }
+        //}
+
+        //public RedisClient NewSimpleConnection()
+        //{
+        //    lock (SimpleClientLock)
+        //    {
+        //        var item = SimpleClients.Dequeue();
+        //        var rc = new RedisClient(item.Split(':')[0],
+        //            int.Parse(item.Split(':')[1]));
+        //        _currentClient = rc;
+        //        SimpleClients.Enqueue(item);
+        //        return _currentClient;
+        //    }
+        //}
 
         public async Task<IDatabase> GetDataBase(RedisConfiguration configuration, int db = 0)
         {

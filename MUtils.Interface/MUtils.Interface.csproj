@@ -4,14 +4,17 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Version>1.0.3</Version>
+    <Version>1.0.3.2</Version>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MUtilsSign.snk</AssemblyOriginatorKeyFile>
+    <RepositoryUrl>https://github.com/kaveh6202/MUtils/tree/master/MUtils.Interface</RepositoryUrl>
+    <Description>Update Project Configuration</Description>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Diagnostics.EventLog" Version="4.5.0" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="AutoMapper">

@@ -1,5 +1,4 @@
-﻿using System;
-using MUtils.Interface.ConfigurationModel;
+﻿using MUtils.Interface.ConfigurationModel;
 
 namespace MUtils.Interface
 {

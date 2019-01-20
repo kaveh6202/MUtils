@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using MUtils.Interface;
-using System.Diagnostics.Tracing;
 using MUtils.Interface.ConfigurationModel;
 
 namespace MUtils.Logging.EventLog
@@ -44,8 +43,7 @@ namespace MUtils.Logging.EventLog
         public void UrgentInfo(string message)
         {
             if (!_initialized) throw new Exception("event log did not initialized");
-            if (_minLogSeverity.Equals("urgentInformation") || _minLogSeverity.Equals("information"))
-                _eventLog.WriteEntry(message, EventLogEntryType.Information);
+            _eventLog.WriteEntry(message, EventLogEntryType.Information);
         }
 
         public void LogError(string sender, string message, Exception ex)

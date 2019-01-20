@@ -21,7 +21,8 @@ namespace MUtils.Cache.Redis
             _config = configuration;
             _logger = logger;
             var connFactory = connectionFactory ?? new RedisDefaultConnectionFactory();
-            _dataBase = Task.Run(async () => await connFactory.GetDataBase(configuration, db)).Result;
+            //_dataBase = Task.Run(async () => await connFactory.GetDataBase(configuration, db)).Result;
+            _dataBase = connFactory.GetDataBase(configuration, db).Result;
         }
 
         public RedisCacheService(RedisConfiguration configuration, int db = 0)
